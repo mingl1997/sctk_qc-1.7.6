@@ -146,7 +146,7 @@ importSTARsolo <- function(
     STARsoloDirs,
     samples,
     STARsoloOuts = "Gene/filtered",
-    matrixFileNames = "umi-Dedup.mtx",
+    matrixFileNames = "matrix.mtx",
     featuresFileNames = "features.tsv",
     barcodesFileNames = "barcodes.tsv",
     gzipped = "auto",
