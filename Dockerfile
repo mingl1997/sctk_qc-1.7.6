@@ -1,51 +1,33 @@
-FROM rocker/shiny-verse:latest
+FROM rocker/shiny-verse:4.3.1
 
-#Install dependencies on Ubuntu
-RUN buildDeps='libpq-dev build-essential libcurl4-openssl-dev libxml2-dev libssl-dev libssh2-1-dev python3-pip libv8-dev pandoc' apt-get update && apt-get install -y \
-	libpq-dev \
-	libgeos-dev \
-	build-essential \
-	libcurl4-openssl-dev \
-	libxml2-dev \
-	libssl-dev \
-	libssh2-1-dev \
-	libv8-dev \
-	libmagick++-dev \
-	libcairo2-dev \
-	pandoc \
-	python3-pip && apt-get purge -y --auto-remove $buildDeps && apt-get install -y curl && echo
+MAINTAINER Joshua Campbell <camp@bu.edu>
 
-RUN export CFLAGS="-O3 -march=nehalem" && pip3 install --upgrade pip && pip3 install numpy llvmlite scrublet virtualenv scanpy
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-cli -y
+COPY . /sctk
+RUN apt-get -y update -qq \
+  && apt-get install -y --no-install-recommends \
+  libjpeg-dev libv8-dev libbz2-dev liblzma-dev libglpk-dev libgeos-dev \
+  libpq-dev \
+  build-essential \
+  libcurl4-openssl-dev \
+  libxml2-dev \
+  libssl-dev \
+  libssh2-1-dev \
+  libmagick++-dev \
+  libcairo2-dev \
+  pandoc \
+  python3-pip
+RUN addgroup --system app \
+    && adduser --system --ingroup app app
+RUN apt-get install -y python3-dev
+RUN export CFLAGS="-O3 -march=nehalem" && pip3 install --upgrade pip && pip3 install numpy llvmlite scrublet virtualenv scanpy anndata bbknn pandas scanorama scipy astroid six
 
-#Add singleCellTK directory and script to docker
-RUN mkdir -p /SCTK_docker/ && mkdir /SCTK_docker/script && mkdir /SCTK_docker/modes 
-
-#ADD ./install_packages.R /SCTK_docker/script
-ADD ./exec/SCTK_runQC.R /SCTK_docker/script
-
-#Install necessary R packages
-RUN R -e "install.packages('BiocManager')"
-RUN R -e "BiocManager::install('edgeR')"
-RUN R -e "install.packages('SeuratObject')"
-RUN R -e "install.packages('scran')"
-RUN R -e "install.packages('Seurat')"
-#RUN R -e "install.packages('shiny')"
-RUN R -e "install.packages('RCurl')"
-RUN R -e "install.packages('rversions')"
-RUN R -e "install.packages('usethis')"
-RUN R -e "install.packages('optparse', dependencies = TRUE)"
-RUN R -e "install.packages('optparse')"
-RUN R -e "install.packages('kableExtra')"
-RUN R -e "BiocManager::install('TENxPBMCData')"
-RUN R -e "BiocManager::install('scRNAseq')"
-RUN R -e "BiocManager::install('celda')"
-#RUN R -e "devtools::install_github('wleepang/shiny-directory-input')"
 RUN R -e "options(timeout=360000)" \
-	&& R -e "devtools::install_github('compbiomed/singleCellTK@86f6e98331d5c6299215859ecc667f16e68dc40f')"
+  && R -e "devtools::install_deps('/sctk', dependencies = TRUE)"
+RUN R -e "options(timeout=360000)" \
+  && R -e "devtools::install_github('mingl1997/sctk_qc-1.7.6', ref = 'devel', dependencies = TRUE, repos = BiocManager::repositories())"
+RUN R -e "options(timeout=360000)" \
+  && R -e "devtools::build('/sctk')"
 
-RUN R -e "install.packages('reticulate')"
-RUN R -e "Sys.setenv(RETICULATE_PYTHON = '/usr/bin/python3')"
-RUN R -e "reticulate::py_config()"
+EXPOSE 80
 
-ENTRYPOINT ["Rscript", "/usr/local/lib/R/site-library/singleCellTK/exec/SCTK_runQC.R"]
+CMD ["R", "-e", "shiny::runApp('/sctk/inst/shiny', port = 80, host = '0.0.0.0')"]
