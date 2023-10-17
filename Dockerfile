@@ -28,7 +28,7 @@ RUN mkdir -p /SCTK_docker/ && mkdir /SCTK_docker/script && mkdir /SCTK_docker/mo
 ADD ./exec/SCTK_runQC.R /SCTK_docker/script
 
 RUN R -e "options(timeout=360000)" \
-  && R -e "devtools::install_github('mingl1997/sctk_qc-1.7.6', ref = 'main', dependencies = TRUE)"
+  && R -e "devtools::install_github('mingl1997/sctk_qc-1.7.6', ref = 'main', force = TRUE, dependencies = TRUE)"
 
 EXPOSE 80
 
