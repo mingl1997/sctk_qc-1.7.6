@@ -22,15 +22,15 @@ RUN apt-get install -y python3-dev
 RUN export CFLAGS="-O3 -march=nehalem" && pip3 install --upgrade pip && pip3 install numpy llvmlite scrublet virtualenv scanpy anndata bbknn pandas scanorama scipy astroid six
 
 #Add singleCellTK directory and script to docker
-#RUN mkdir -p /SCTK_docker/ && mkdir /SCTK_docker/script && mkdir /SCTK_docker/modes 
+RUN mkdir -p /SCTK_docker/ && mkdir /SCTK_docker/script && mkdir /SCTK_docker/modes 
 
 #ADD ./install_packages.R /SCTK_docker/script
-#ADD ./exec/SCTK_runQC.R /SCTK_docker/script
+ADD ./exec/SCTK_runQC.R /SCTK_docker/script
 
 #RUN R -e "options(timeout=360000)" \
 #  && R -e "devtools::install_deps('/sctk', dependencies = TRUE)"
 RUN R -e "options(timeout=360000)" \
-  && R -e "devtools::install_github('mingl1997/sctk_qc-1.7.6', ref = 'main', dependencies = TRUE)"
+  && R -e "devtools::install_github('mingl1997/sctk_qc-1.7.6', ref = 'starsolotest', dependencies = TRUE)"
 #RUN R -e "options(timeout=360000)" \
 #  && R -e "devtools::build('sctk_qc-1.7.6')"
 
