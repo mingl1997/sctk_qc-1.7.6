@@ -21,13 +21,20 @@ RUN addgroup --system app \
 RUN apt-get install -y python3-dev
 RUN export CFLAGS="-O3 -march=nehalem" && pip3 install --upgrade pip && pip3 install numpy llvmlite scrublet virtualenv scanpy anndata bbknn pandas scanorama scipy astroid six
 
+#Add singleCellTK directory and script to docker
+#RUN mkdir -p /SCTK_docker/ && mkdir /SCTK_docker/script && mkdir /SCTK_docker/modes 
+
+#ADD ./install_packages.R /SCTK_docker/script
+#ADD ./exec/SCTK_runQC.R /SCTK_docker/script
+
+#RUN R -e "options(timeout=360000)" \
+#  && R -e "devtools::install_deps('/sctk', dependencies = TRUE)"
 RUN R -e "options(timeout=360000)" \
-  && R -e "devtools::install_deps('/sctk', dependencies = TRUE)"
-RUN R -e "options(timeout=360000)" \
-  && R -e "devtools::install_github('mingl1997/sctk_qc-1.7.6', ref = 'devel', dependencies = TRUE, repos = BiocManager::repositories())"
-RUN R -e "options(timeout=360000)" \
-  && R -e "devtools::build('/sctk')"
+  && R -e "devtools::install_github('mingl1997/sctk_qc-1.7.6', ref = 'main', dependencies = TRUE)"
+#RUN R -e "options(timeout=360000)" \
+#  && R -e "devtools::build('sctk_qc-1.7.6')"
 
 EXPOSE 80
 
-CMD ["R", "-e", "shiny::runApp('/sctk/inst/shiny', port = 80, host = '0.0.0.0')"]
+#CMD ["R", "-e", "shiny::runApp('/sctk/inst/shiny', port = 80, host = '0.0.0.0')"]
+ENTRYPOINT ["Rscript", "/usr/local/lib/R/site-library/singleCellTK/exec/SCTK_runQC.R"]
