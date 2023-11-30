@@ -33,4 +33,5 @@ RUN R -e "options(timeout=360000)" \
 EXPOSE 80
 
 #CMD ["R", "-e", "shiny::runApp('/sctk/inst/shiny', port = 80, host = '0.0.0.0')"]
+#ENTRYPOINT ["Rscript", "./SCTK_docker/exec/SCTK_runQC.R"]
 ENTRYPOINT ["Rscript", "/usr/local/lib/R/site-library/singleCellTK/exec/SCTK_runQC.R"]
